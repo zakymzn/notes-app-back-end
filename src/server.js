@@ -117,12 +117,25 @@ const init = async () => {
     const { response } = request;
 
     // penanganan client error secara internal
-    if (response instanceof ClientError) {
+    if (response instanceof Error) {
+      if (response instanceof ClientError) {
+        const newResponse = h.response({
+          status: "fail",
+          message: response.message,
+        });
+        newResponse.code(response.statusCode);
+        return newResponse;
+      }
+
+      if (!response.isServer) {
+        return h.continue;
+      }
+
       const newResponse = h.response({
-        status: "fail",
-        message: response.message,
+        status: "error",
+        message: "Internal Server Error",
       });
-      newResponse.code(response.statusCode);
+      newResponse.code(500);
       return newResponse;
     }
 
